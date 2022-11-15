@@ -1,0 +1,6 @@
+# dependencies that make developing/debugging easier
+
+black
+mypy
+funlib.show.neuroglancer
+funlib.segment

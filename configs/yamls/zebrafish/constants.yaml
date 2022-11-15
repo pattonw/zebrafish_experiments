@@ -1,0 +1,33 @@
+# default paths to check for data
+input_container: /groups/mousebrainmicro/home/pattonw/Data/michelle_zebrafish/zebrafish.n5
+dataset_container: /nrs/funke/pattonw/data/zebrafish/zebrafish.n5
+data_group: "{crop}/{index}"
+raw_dataset: "{crop}/{index}/raw"
+gt_dataset: "{crop}/{index}/{organelle}"
+mask_dataset: "{crop}/{index}/{organelle}_mask"
+prediction_container: "/nrs/funke/pattonw/predictions/zebrafish/zebrafish.n5"
+
+data_problems:
+    17:
+        2:
+            cells:
+                id_mapping:
+                    - [34, 0]
+                    - [21, 0]
+                mask_id: 81
+    8:
+        1:
+            axons:
+                id_mapping:
+                    - [8, 3]
+                mask_id: 11
+            cells:
+                mask_id: 5
+        2:
+            axons:
+                mask_id: 4
+            cells:
+                mask_id: 3
+            vessel:
+                mask_id: 3
+

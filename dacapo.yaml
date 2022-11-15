@@ -1,0 +1,4 @@
+mongo_db_host: mongodb://microdosingAdmin:Cu2CO3OH2@funke-mongodb2.int.janelia.org:27017
+mongo_db_name: dacapo_zebrafish
+runs_base_dir: "/nrs/funke/pattonw/zebrafish"
+file_server: "http://funkelab-ws1:3000"
