@@ -112,7 +112,8 @@ def update(
                                 + 1 : -(len(run_config.name.split("__")[1]) + 2)
                             ]
                             for name in run_names
-                            if name.startswith(run_config.name.split("__")[0]) and name.endswith(run_config.name.split("__")[1])
+                            if name.startswith(run_config.name.split("__")[0])
+                            and name.endswith(run_config.name.split("__")[1])
                         ]
                     )
                     versions.remove("")
@@ -139,7 +140,7 @@ def update(
         yaml.safe_dump([trainer.name for trainer in trainers])
     )
     (output_path / "starts.yaml").open("w").write(
-        yaml.safe_dump([start for start in starts if len(start) > 0])
+        yaml.safe_dump([start if len(start) > 0 else None for start in starts])
     )
 
 

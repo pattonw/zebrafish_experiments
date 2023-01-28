@@ -29,7 +29,6 @@ def cli(log_level):
 @cli.command()
 @click.option("-n", "--name", type=str)
 @click.option("-c", "--criterion", type=str)
-@click.option("-cs", "--channels", type=str)
 @click.option("-oc", "--out_container", type=click.Path(exists=True, file_okay=False))
 @click.option("-od", "--out_dataset", type=str)
 @click.option("-ic", "--in_container", type=click.Path(exists=True, file_okay=False))
@@ -39,7 +38,6 @@ def cli(log_level):
 def start_worker(
     name,
     criterion,
-    channels,
     out_container,
     out_dataset,
     in_container,
@@ -49,7 +47,6 @@ def start_worker(
 ):
     shift = min_raw
     scale = max_raw - min_raw
-    parsed_channels = [channel.split(":") for channel in channels.split(",")]
 
     device = torch.device("cuda")
 
@@ -79,34 +76,27 @@ def start_worker(
     out_datasets = [
         daisy.open_ds(
             out_container,
-            f"{out_dataset}/{channel}",
+            f"{out_dataset}/{i}",
             mode="r+",
         )
-        for _, channel in parsed_channels
+        for i in range(0, run.task.predictor.num_channels, 3)
     ]
+    out_dataset = out_datasets[0]
 
-    while True:
-        with client.acquire_block() as block:
-            if block is None:
-                break
-            raw_input = (
-                2.0
-                * (
+    with torch.no_grad():
+        while True:
+            with client.acquire_block() as block:
+                if block is None:
+                    break
+                raw_input = (
                     raw_dataset.to_ndarray(
                         roi=block.read_roi, fill_value=shift + scale
                     ).astype(np.float32)
                     - shift
-                )
-                / scale
-            ) - 1.0
-            raw_input = np.expand_dims(raw_input, (0, 1))
-            write_roi = block.write_roi.intersect(out_datasets[0].roi)
+                ) / scale
+                raw_input = np.expand_dims(raw_input, (0, 1))
+                write_roi = block.write_roi.intersect(out_dataset.roi)
 
-            if out_datasets[0].to_ndarray(write_roi).any():
-                # block has already been processed
-                continue
-
-            with torch.no_grad():
                 predictions = daisy.Array(
                     model.forward(torch.from_numpy(raw_input).float().to(device))
                     .detach()
@@ -116,24 +106,15 @@ def start_worker(
                     output_voxel_size,
                 )
 
-                write_data = predictions.to_ndarray(write_roi).clip(-1, 1)
-                write_data = (write_data + 1) * 255.0 / 2.0
-                for (i, _), out_dataset in zip(parsed_channels, out_datasets):
-                    indexes = []
-                    if "-" in i:
-                        indexes = [int(j) for j in i.split("-")]
-                    else:
-                        indexes = [int(i)]
-                    if len(indexes) > 1:
-                        out_dataset[write_roi] = np.stack(
-                            [write_data[j] for j in indexes], axis=0
-                        ).astype(np.uint8)
-                    else:
-                        out_dataset[write_roi] = write_data[indexes[0]].astype(np.uint8)
+                write_data = predictions.to_ndarray(write_roi)
+                for jj, ii in enumerate(range(0, run.task.predictor.num_channels, 3)):
+                    out_datasets[jj][write_roi] = 1 / (
+                        1 + np.exp(-write_data[ii : ii + 3])
+                    )
+                    # out_datasets[jj][write_roi] = write_data[ii : ii + 3]
 
-            block.status = daisy.BlockStatus.SUCCESS
+                block.status = daisy.BlockStatus.SUCCESS
 
 
 if __name__ == "__main__":
     cli()
-

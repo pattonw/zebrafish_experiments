@@ -28,7 +28,7 @@ out_container = zarr.open(constants["dataset_container"])
 def copy_data(crop, index, organelle):
 
     raw = in_container[constants["raw_dataset"].format(crop=crop, index=index)][:]
-    out_container[constants["raw_dataset"].format(crop=crop, index=index)] = raw
+    out_container[constants["raw_dataset"].format(crop=crop, index=index)] = raw.astype(np.uint8)
 
     try:
         in_data = in_container[
@@ -73,10 +73,10 @@ def copy_data(crop, index, organelle):
 
     out_container[
         constants["gt_dataset"].format(crop=crop, index=index, organelle=organelle)
-    ] = in_data
+    ] = in_data.astype(np.uint64)
     out_container[
         constants["mask_dataset"].format(crop=crop, index=index, organelle=organelle)
-    ] = in_mask
+    ] = in_mask.astype(np.uint64)
 
 
 for organelle in targets:

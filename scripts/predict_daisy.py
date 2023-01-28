@@ -26,7 +26,6 @@ def cli(log_level):
 def spawn_worker(
     name,
     criterion,
-    channels,
     out_container,
     out_dataset,
     in_container,
@@ -47,8 +46,6 @@ def spawn_worker(
                     f"{name}",
                     "-c",
                     f"{criterion}",
-                    "-cs",
-                    f"{channels}",
                     "-oc",
                     f"{out_container}",
                     "-od",
@@ -88,8 +85,6 @@ def spawn_worker(
                     f"{name}",
                     "-c",
                     f"{criterion}",
-                    "-cs",
-                    f"{channels}",
                     "-oc",
                     f"{out_container}",
                     "-od",
@@ -111,7 +106,6 @@ def spawn_worker(
 @cli.command()
 @click.option("-n", "--name", type=str)
 @click.option("-c", "--criterion", type=str)
-@click.option("-cs", "--channels", type=str)
 @click.option("-oc", "--out_container", type=click.Path(file_okay=False))
 @click.option("-od", "--out_dataset", type=str)
 @click.option("-ic", "--in_container", type=click.Path(exists=True, file_okay=False))
@@ -131,7 +125,6 @@ def spawn_worker(
 def predict(
     name,
     criterion,
-    channels,
     out_container,
     out_dataset,
     in_container,
@@ -145,7 +138,6 @@ def predict(
 ):
     if not local:
         assert billing is not None
-    parsed_channels = [channel.split(":") for channel in channels.split(",")]
 
     raw = daisy.open_ds(in_container, in_dataset)
 
@@ -172,7 +164,9 @@ def predict(
     output_voxel_size = model.scale(raw.voxel_size)
 
     read_shape = model.eval_input_shape * raw.voxel_size
-    write_shape = model.compute_output_shape(model.eval_input_shape)[1] * output_voxel_size
+    write_shape = (
+        model.compute_output_shape(model.eval_input_shape)[1] * output_voxel_size
+    )
     context = (read_shape - write_shape) / 2
     read_roi = daisy.Roi((0,) * read_shape.dims, read_shape)
     write_roi = read_roi.grow(-context, -context)
@@ -180,16 +174,16 @@ def predict(
     total_write_roi = parsed_roi
     total_read_roi = total_write_roi.grow(context, context)
 
-    for indexes, channel in parsed_channels:
-        num_channels = None if "-" not in indexes else len(indexes.split("-"))
+    for i in range(0, run.task.predictor.num_channels, 3):
+
         daisy.prepare_ds(
             out_container,
-            f"{out_dataset}/{channel}",
+            f"{out_dataset}/{i}",
             total_roi=total_write_roi,
             voxel_size=output_voxel_size,
             write_size=write_roi.shape,
-            dtype=np.uint8,
-            num_channels=num_channels,
+            dtype=np.float32,
+            num_channels=3 if i + 3 <= run.task.predictor.num_channels else 1,
         )
 
     task = daisy.Task(
@@ -200,7 +194,6 @@ def predict(
         process_function=spawn_worker(
             name,
             criterion,
-            channels,
             out_container,
             out_dataset,
             in_container,

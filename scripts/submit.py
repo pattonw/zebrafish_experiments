@@ -75,9 +75,6 @@ def run(run, billing, queue, num_cpus):
 @click.option("-p", "--prediction", type=click.Path(exists=True, dir_okay=False))
 @click.option("-w", "--workers", type=int, default=30)
 def predict(prediction, workers):
-    targets = yaml.safe_load(
-        Path("configs/yamls/zebrafish/targets/prediction_targets.yaml").open("r").read()
-    )
     prediction_data = yaml.safe_load(Path(prediction).open("r").read())
 
     name = prediction_data["name"]
@@ -109,25 +106,9 @@ def predict(prediction, workers):
             if start is not None:
                 roi = ",".join(list(f"{s}:{e}" for s, e in zip(start, end)))
 
-            channels = [
-                str(targets[setup["target"]].index(output["class"]))
-                + ":"
-                + output["name"]
-                for output in outputs
-            ]
             dataset_name = dataset["name"]
             dataset_array = dataset["array"]
-
-            raw_container = Path(
-                constants["default_dataset_container"].format(dataset=dataset_name)
-            )
-            fallback_raw_container = Path(
-                f"/nrs/zebrafish/pattonw/data/tmp_data/{dataset_name}/{dataset_name}.n5"
-            )
-
-            raw_container = (
-                raw_container if raw_container.exists() else fallback_raw_container
-            )
+            dataset_container = dataset["container"]
 
 
             command = (
@@ -139,14 +120,12 @@ def predict(prediction, workers):
                     setup["name"],
                     "-c",
                     criterion,
-                    "-cs",
-                    ",".join(channels),
                     "-oc",
-                    f"/nrs/zebrafish/pattonw/predictions/{dataset_name}/{dataset_name}.n5",
+                    constants["prediction_container"],
                     "-od",
-                    f"predictions/{name}",
+                    f"predictions/{name}/{dataset_name}",
                     "-ic",
-                    f"{raw_container}",
+                    dataset_container,
                     "-id",
                     dataset_array,
                 ]

@@ -1,0 +1,26 @@
+name: 2022-12-15
+billing: funke
+predictions:
+  - outputs:
+      - cells
+    datasets:
+      - name: 16
+        container: /nrs/funke/adjavond/zebrafish/data/s16_bottom_110nm_rec_.n5
+        array: raw
+      - name: 23
+        container: /nrs/funke/adjavond/zebrafish/data/s23_bottom_110nm_rec_.n5
+        array: raw
+      - name: 17
+        container: /nrs/funke/adjavond/zebrafish/data/sample17_bottom_110nm_rec_.n5
+        array: raw
+      - name: 20
+        container: /nrs/funke/adjavond/zebrafish/data/s20_bottom_good_110nm_rec_.n5
+        array: raw
+      - name: 24
+        container: /nrs/funke/adjavond/zebrafish/data/s24_bottom_110nm_rec_.n5
+        array: raw
+    setups:
+      - name: finetuned_3d_lsdaffs_zebrafish_cells_upsample-unet_default__1
+        target: cells
+    criteria:
+      - "40000"

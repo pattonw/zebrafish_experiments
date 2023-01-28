@@ -6,6 +6,7 @@ raw_dataset: "{crop}/{index}/raw"
 gt_dataset: "{crop}/{index}/{organelle}"
 mask_dataset: "{crop}/{index}/{organelle}_mask"
 prediction_container: "/nrs/funke/pattonw/predictions/zebrafish/zebrafish.n5"
+sample_path: "/nrs/funke/adjavond/zebrafish/data"
 
 data_problems:
     17:

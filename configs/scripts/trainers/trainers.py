@@ -49,14 +49,14 @@ def update(force):
                 uniform_3d_rotation=True,
             ),
             IntensityAugmentConfig(
-                scale=(0.25, 1.75),
-                shift=(-0.5, 0.35),
+                scale=(0.85, 1.15),
+                shift=(-0.1, 0.1),
                 clip=True,
             ),
         ],
         num_data_fetchers=20,
         snapshot_interval=10000,
-        min_masked=0.15,
+        min_masked=0.01,
     )
     gunpowder_test_config = GunpowderTrainerConfig(
         name="test-trainer",
