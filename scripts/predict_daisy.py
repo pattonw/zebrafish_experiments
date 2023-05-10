@@ -174,17 +174,15 @@ def predict(
     total_write_roi = parsed_roi
     total_read_roi = total_write_roi.grow(context, context)
 
-    for i in range(0, run.task.predictor.num_channels, 3):
-
-        daisy.prepare_ds(
-            out_container,
-            f"{out_dataset}/{i}",
-            total_roi=total_write_roi,
-            voxel_size=output_voxel_size,
-            write_size=write_roi.shape,
-            dtype=np.float32,
-            num_channels=3 if i + 3 <= run.task.predictor.num_channels else 1,
-        )
+    daisy.prepare_ds(
+        out_container,
+        f"{out_dataset}",
+        total_roi=total_write_roi,
+        voxel_size=output_voxel_size,
+        write_size=write_roi.shape,
+        dtype=np.uint8,
+        num_channels=run.task.predictor.num_channels,
+    )
 
     task = daisy.Task(
         "test_server_task",

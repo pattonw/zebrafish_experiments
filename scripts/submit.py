@@ -99,8 +99,8 @@ def predict(prediction, workers):
             default_datasets is None
         ), f"Default vs matrix datasets. Provide 1: {default_datasets}, {datasets}!"
 
-        for dataset, setup, criterion in itertools.product(
-            datasets if datasets is not None else default_datasets, setups, criteria
+        for output, dataset, setup, criterion in itertools.product(
+            outputs, datasets if datasets is not None else default_datasets, setups, criteria
         ):
 
             if start is not None:
@@ -123,7 +123,7 @@ def predict(prediction, workers):
                     "-oc",
                     constants["prediction_container"],
                     "-od",
-                    f"predictions/{name}/{dataset_name}",
+                    f"predictions/{name}/{dataset_name}/{output}_{setup['name']}__{criterion}",
                     "-ic",
                     dataset_container,
                     "-id",

@@ -34,7 +34,7 @@ def relabel(container, frags, lut, output):
     mapping = np.load(Path(container, lut))["fragment_segment_lut"]
     segments = replace_values(fragments, mapping[0], mapping[1])
 
-    zarr_container.create_dataset(output, data=segments)
+    zarr_container.create_dataset(output, data=segments, overwrite=True)
 
 
 @cli.command()

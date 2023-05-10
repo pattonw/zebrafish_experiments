@@ -215,8 +215,9 @@ def check_block(completed_collection, block):
 
 if __name__ == "__main__":
     # samples = [16, 17, 23]
-    samples = ["2022-12-15/16"]
-    samples = ["2023-01-17/23_bot", "2023-01-17/23_mid1", "2023-01-17/23_top"]
+    # samples = ["2022-12-15/16"]
+    # samples = ["2023-01-17/23_bot", "2023-01-17/23_mid1", "2023-01-17/23_top"]
+    samples = ["2023-02-06/23_bot/vessel_35000", "2023-02-06/23_bot/axons_20000"]
     for sample in samples:
         start = time.time()
 
@@ -225,7 +226,7 @@ if __name__ == "__main__":
             affs_file="/nrs/funke/pattonw/predictions/zebrafish/zebrafish.n5",
             affs_dataset=f"predictions/{sample}/0",
             fragments_file="/nrs/funke/pattonw/predictions/zebrafish/zebrafish.n5",
-            fragments_dataset=f"processed/{sample}/cells/fragments",
+            fragments_dataset=f"processed/{sample}/fragments",
             block_size=(256, 256, 256),
             context=(16, 16, 16),
             db_host="mongodb://microdosingAdmin:Cu2CO3OH2@funke-mongodb2.int.janelia.org:27017",

@@ -162,16 +162,17 @@ if __name__ == "__main__":
 
     samples = [16, 17, 23]
     samples = ["2023-01-17/23_bot", "2023-01-17/23_mid1", "2023-01-17/23_top"]
+    samples = ["2023-02-06/23_bot/vessel_35000", "2023-02-06/23_bot/axons_20000"]
     for sample in samples:
         start = time.time()
         find_segments(
             db_host="mongodb://microdosingAdmin:Cu2CO3OH2@funke-mongodb2.int.janelia.org:27017",
             db_name="zebrafish_postprocessing",
             fragments_file="/nrs/funke/pattonw/predictions/zebrafish/zebrafish.n5",
-            fragments_dataset=f"processed/{sample}/cells/fragments",
+            fragments_dataset=f"processed/{sample}/cells/fragments_filtered",
             edges_collection=f"{sample}_edges_hist_quant_75",
-            thresholds_minmax=[0.0, 1.0],
-            thresholds_step=0.09,
+            thresholds_minmax=[0.0, 0.1],
+            thresholds_step=0.001,
             sample_name=f"{sample}",
         )
         print(

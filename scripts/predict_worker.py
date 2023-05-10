@@ -73,15 +73,11 @@ def start_worker(
     voxel_size = raw_dataset.voxel_size
     output_voxel_size = model.scale(voxel_size)
 
-    out_datasets = [
-        daisy.open_ds(
-            out_container,
-            f"{out_dataset}/{i}",
-            mode="r+",
-        )
-        for i in range(0, run.task.predictor.num_channels, 3)
-    ]
-    out_dataset = out_datasets[0]
+    out_dataset = daisy.open_ds(
+        out_container,
+        f"{out_dataset}",
+        mode="r+",
+    )
 
     with torch.no_grad():
         while True:
@@ -107,11 +103,7 @@ def start_worker(
                 )
 
                 write_data = predictions.to_ndarray(write_roi)
-                for jj, ii in enumerate(range(0, run.task.predictor.num_channels, 3)):
-                    out_datasets[jj][write_roi] = 1 / (
-                        1 + np.exp(-write_data[ii : ii + 3])
-                    )
-                    # out_datasets[jj][write_roi] = write_data[ii : ii + 3]
+                out_dataset[write_roi] = (255 / (1 + np.exp(-write_data))).astype(np.uint8)
 
                 block.status = daisy.BlockStatus.SUCCESS
 
