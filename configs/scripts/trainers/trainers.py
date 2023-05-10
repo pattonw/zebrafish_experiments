@@ -82,8 +82,30 @@ def update(force):
         min_masked=0.15,
     )
 
+    gunpowder_config_v3 = GunpowderTrainerConfig(
+        name="default_v4",
+        batch_size=2,
+        learning_rate=0.0001,
+        augments=[
+            ElasticAugmentConfig(
+                control_point_spacing=(20, 20, 20),
+                control_point_displacement_sigma=(5.0, 5.0, 5.0),
+                rotation_interval=(0, math.pi / 2.0),
+                subsample=8,
+                uniform_3d_rotation=True,
+            ),
+            IntensityAugmentConfig(
+                scale=(0.7, 1.3),
+                shift=(-0.2, 0.2),
+                clip=True,
+            ),
+        ],
+        num_data_fetchers=20,
+        snapshot_interval=500,
+    )
+
     trainer_config_names = []
-    for trainer_config in [gunpowder_config, gunpowder_test_config]:
+    for trainer_config in [gunpowder_config, gunpowder_config_v3, gunpowder_test_config]:
         try:
             config_store.store_trainer_config(trainer_config)
         except DuplicateNameError as e:
