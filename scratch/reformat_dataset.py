@@ -253,9 +253,9 @@ def generate_points(sample: str, organelle: str):
 
 
 RELABEL = True
-MERGE_MASKS = False
-COPY_DATA = False
-UPDATE_MASKS = False
+MERGE_MASKS = True
+COPY_DATA = True
+UPDATE_MASKS = True
 GENERATE_POINTS = True
 
 condition = lambda sample, organelle, annotation_type: (
