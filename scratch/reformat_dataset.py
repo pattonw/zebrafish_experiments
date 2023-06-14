@@ -6,6 +6,9 @@ from pathlib import Path
 import itertools
 import csv
 
+# Script for converting the various training data into a consistent
+# format for training. Requires a significant amount of RAM to Run
+
 # Load yamls
 yaml_root_dir = Path("configs/yamls/zebrafish")
 assert yaml_root_dir.exists(), f"{yaml_root_dir} does not exist!"
@@ -31,7 +34,6 @@ out_container = zarr.open(constants["dataset_container"])
 
 
 def copy_data(crop, index, organelle):
-
     raw = in_container[constants["raw_dataset"].format(sample=f"{crop}-{index}")][:]
     out_container[
         constants["raw_dataset"].format(sample=f"{crop}-{index}")
@@ -191,7 +193,6 @@ def relabel(organelle: str, sample: str, annotation_type: str):
 
 
 def merge_masks(organelle_a: str, organelle_b: str, sample: str):
-
     try:
         in_gt_a = (
             out_container[
@@ -237,7 +238,6 @@ def merge_masks(organelle_a: str, organelle_b: str, sample: str):
 
 
 def generate_points(sample: str, organelle: str):
-
     in_mask = out_container[
         constants["mask_dataset"].format(sample=sample, organelle=organelle)
     ][:]
@@ -266,7 +266,6 @@ if RELABEL:
     for organelle, samples in id_annotations.items():
         for sample, annotation_types in samples.items():
             for annotation_type in annotation_types:
-
                 if not condition(sample, organelle, annotation_type):
                     continue
                 relabel(organelle, sample, annotation_type)
@@ -276,8 +275,10 @@ if MERGE_MASKS:
         organelle_a_samples = set(id_annotations[organelle_a].keys())
         organelle_b_samples = set(id_annotations[organelle_b].keys())
         for sample in organelle_a_samples.union(organelle_b_samples):
-
-            if not (condition(sample, organelle_a, None) or condition(sample, organelle_b, None)):
+            if not (
+                condition(sample, organelle_a, None)
+                or condition(sample, organelle_b, None)
+            ):
                 continue
             merge_masks(organelle_a, organelle_b, sample)
 
