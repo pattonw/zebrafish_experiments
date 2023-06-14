@@ -1,0 +1,18 @@
+axons:
+  23_bot:
+    - bad
+    - negative
+    - segments
+cells:
+  16_bot:
+    - bad
+    - negative
+    - good
+  23_mid1:
+    - bad
+    - negative
+    - good
+vessel:
+  23_bot:
+    - negative
+    - segments
