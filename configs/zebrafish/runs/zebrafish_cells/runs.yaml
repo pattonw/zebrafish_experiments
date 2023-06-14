@@ -1,2 +1,4 @@
-- scratch_3d_lsdaffs_zebrafish_cells_upsample-unet_default__0
-- scratch_3d_lsdaffs_zebrafish_cells_upsample-unet_default__1
+- finetuned_3d_lsdaffs_zebrafish_cells_upsample-unet_default_v3__0
+- finetuned_3d_lsdaffs_zebrafish_cells_upsample-unet_default_v3__1
+- scratch_3d_lsdaffs_zebrafish_cells_upsample-unet_default_v3__0
+- scratch_3d_lsdaffs_zebrafish_cells_upsample-unet_default_v3__1
