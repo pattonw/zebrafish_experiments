@@ -8,6 +8,9 @@ import pymongo
 import time
 import subprocess
 
+from funlib.persistence import open_ds, prepare_ds
+from funlib.geometry import Coordinate
+
 logging.basicConfig(level=logging.INFO)
 
 
@@ -29,9 +32,9 @@ def extract_fragments(
     filter_fragments=0,
     replace_sections=None,
     drop=False,
+    shrink_objects=0,
     billing=None,
 ):
-
     """Run agglomeration in parallel blocks. Requires that affinities have been
     predicted before.
 
@@ -63,7 +66,7 @@ def extract_fragments(
     """
 
     logging.info("Reading affs from %s", affs_file)
-    affs = daisy.open_ds(affs_file, affs_dataset, mode="r")
+    affs = open_ds(affs_file, affs_dataset, mode="r")
 
     client = pymongo.MongoClient(db_host)
     db = client[db_name]
@@ -76,6 +79,22 @@ def extract_fragments(
         if drop:
             print(f"dropping {completed_collection}")
             db.drop_collection(completed_collection)
+    if f"{sample_name}_nodes" in db.list_collection_names():
+        nodes_collection = db[f"{sample_name}_nodes"]
+        if drop:
+            print(f"dropping {nodes_collection}")
+            db.drop_collection(nodes_collection)
+    if f"{sample_name}_meta" in db.list_collection_names():
+        meta_collection = db[f"{sample_name}_meta"]
+        if drop:
+            print(f"dropping {meta_collection}")
+            db.drop_collection(meta_collection)
+    for collection_name in db.list_collection_names():
+        if collection_name.startswith(f"{sample_name}_edges"):
+            edges_collection = db[collection_name]
+            if drop:
+                print(f"dropping {edges_collection}")
+                db.drop_collection(edges_collection)
 
     if completed_collection_name not in db.list_collection_names():
         completed_collection = db[completed_collection_name]
@@ -83,8 +102,12 @@ def extract_fragments(
             [("block_id", pymongo.ASCENDING)], name="block_id"
         )
 
+    complete_cache = set(
+        [tuple(doc["block_id"]) for doc in completed_collection.find()]
+    )
+
     # prepare fragments dataset
-    fragments = daisy.prepare_ds(
+    fragments = prepare_ds(
         fragments_file,
         fragments_dataset,
         affs.roi,
@@ -92,6 +115,7 @@ def extract_fragments(
         affs.voxel_size,
         np.uint64,
         daisy.Roi((0, 0, 0), block_size),
+        delete=drop,
     )
 
     context = daisy.Coordinate(context)
@@ -123,9 +147,10 @@ def extract_fragments(
             filter_fragments,
             num_voxels_in_block,
             replace_sections,
+            shrink_objects,
             billing,
         ),
-        check_function=lambda b: check_block(completed_collection, b),
+        check_function=lambda b: check_block(completed_collection, complete_cache, b),
         num_workers=num_workers,
         read_write_conflict=False,
         fit="shrink",
@@ -150,9 +175,9 @@ def start_worker(
     filter_fragments,
     num_voxels_in_block,
     replace_sections,
+    shrink_objects,
     billing,
 ):
-
     worker_id = daisy.Context.from_env()["worker_id"]
     task_id = daisy.Context.from_env()["task_id"]
 
@@ -184,6 +209,7 @@ def start_worker(
         "filter_fragments": filter_fragments,
         "num_voxels_in_block": num_voxels_in_block,
         "replace_sections": replace_sections,
+        "shrink_objects": shrink_objects,
     }
 
     config_str = "".join(["%s" % (v,) for v in config.values()])
@@ -201,55 +227,55 @@ def start_worker(
     command = f"python {worker} {config_file}"
 
     subprocess.run(
-        ["bsub", "-P", "funke", "-n", "1", "-o", log_out, "-e", log_err, command]
+        ["bsub", "-I", "-P", billing, "-n", "2", "-o", log_out, "-e", log_err, command]
     )
-    # subprocess.run(command.split() + [">", log_out, "&>", log_err])
 
 
-def check_block(completed_collection, block):
-
-    done = len(list(completed_collection.find({"block_id": block.block_id}))) >= 1
+def check_block(completed_collection, complete_cache, block):
+    done = (
+        block.block_id in complete_cache
+        or len(list(completed_collection.find({"block_id": block.block_id}))) >= 1
+    )
 
     return done
 
 
 if __name__ == "__main__":
-    # samples = [16, 17, 23]
-    # samples = ["2022-12-15/16"]
-    # samples = ["2023-01-17/23_bot", "2023-01-17/23_mid1", "2023-01-17/23_top"]
-    samples = ["2023-02-06/23_bot/vessel_35000", "2023-02-06/23_bot/axons_20000"]
-    for sample in samples:
-        start = time.time()
+    voxel_size = Coordinate(1, 1, 1)
+    block_size = Coordinate(256, 256, 256) * voxel_size
+    context = Coordinate(16, 16, 16) * voxel_size
+    start = time.time()
 
-        extract_fragments(
-            sample_name=f"{sample}",
-            affs_file="/nrs/funke/pattonw/predictions/zebrafish/zebrafish.n5",
-            affs_dataset=f"predictions/{sample}/0",
-            fragments_file="/nrs/funke/pattonw/predictions/zebrafish/zebrafish.n5",
-            fragments_dataset=f"processed/{sample}/fragments",
-            block_size=(256, 256, 256),
-            context=(16, 16, 16),
-            db_host="mongodb://microdosingAdmin:Cu2CO3OH2@funke-mongodb2.int.janelia.org:27017",
-            db_name="zebrafish_postprocessing",
-            num_workers=50,
-            fragments_in_xy=False,
-            epsilon_agglomerate=0.1,
-            mask_file=None,
-            mask_dataset=None,
-            filter_fragments=0.01,
-            replace_sections=None,
-            drop=False,
-            billing="funke",
-        )
+    extract_fragments(
+        sample_name=f"s17-stitched",
+        affs_file="/nrs/funke/pattonw/predictions/zebrafish/zebrafish.n5",
+        affs_dataset=f"predictions/2023-05-09/s17/cells_finetuned_3d_lsdaffs_zebrafish_cells_upsample-unet_default_v3__1__60000",
+        fragments_file="/nrs/funke/pattonw/predictions/zebrafish/zebrafish.n5",
+        fragments_dataset="predictions/2023-05-09/s17/cells_finetuned_3d_lsdaffs_zebrafish_cells_upsample-unet_default_v3__1__60000_fragments",
+        block_size=tuple(block_size),
+        context=tuple(context),
+        db_host="mongodb://microdosingAdmin:Cu2CO3OH2@funke-mongodb2.int.janelia.org:27017",
+        db_name="dacapo_zebrafish",
+        num_workers=64,
+        fragments_in_xy=False,
+        epsilon_agglomerate=0.1,
+        mask_file=None,
+        mask_dataset=None,
+        filter_fragments=0.5,
+        replace_sections=None,
+        drop=True,
+        shrink_objects=1,
+        billing="funke",
+    )
 
-        end = time.time()
+    end = time.time()
 
-        seconds = end - start
-        minutes = seconds / 60
-        hours = minutes / 60
-        days = hours / 24
+    seconds = end - start
+    minutes = seconds / 60
+    hours = minutes / 60
+    days = hours / 24
 
-        print(
-            "Total time to extract fragments: %f seconds / %f minutes / %f hours / %f days"
-            % (seconds, minutes, hours, days)
-        )
+    print(
+        "Total time to extract fragments: %f seconds / %f minutes / %f hours / %f days"
+        % (seconds, minutes, hours, days)
+    )

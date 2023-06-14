@@ -1,14 +1,15 @@
 import daisy
-from funlib.persistence import graphs
 import logging
 import time
 import os
 import numpy as np
 from funlib.segment.graphs.impl import connected_components
-from funlib.persistence import open_ds
+from funlib.persistence import open_ds, graphs
 
-logging.basicConfig(level=logging.DEBUG)
-logging.getLogger("funlib..persistence.graphs.shared_graph_provider").setLevel(
+import mwatershed as mws
+
+logging.basicConfig(level=logging.INFO)
+logging.getLogger("funlib.persistence.graphs.shared_graph_provider").setLevel(
     logging.DEBUG
 )
 
@@ -78,16 +79,20 @@ def find_segments(
         position_attribute=["center_z", "center_y", "center_x"],
     )
 
+    print("Got Graph provider")
+
     fragments = open_ds(fragments_file, fragments_dataset)
 
+    print("Opened fragments")
+
     roi = fragments.roi
-    roi = None
     # roi = daisy.Roi(roi.offset, (20000, 10000, 10000))
+
+    print("Getting graph for roi %s" % roi)
 
     graph = graph_provider.get_graph(roi)
 
     print("Read graph in %.3fs" % (time.time() - start))
-    print("Graph contains %d nodes, %d edges" % (len(graph.nodes), len(graph.edges)))
 
     if graph.number_of_nodes == 0:
         print("No nodes found in roi %s" % roi)
@@ -95,69 +100,73 @@ def find_segments(
 
     nodes = np.array(graph.nodes)
     edges = np.stack(list(graph.edges), axis=0)
-    scores = np.array([graph.edges[tuple(e)]["merge_score"] for e in edges]).astype(
+    adj_scores = np.array([graph.edges[tuple(e)]["adj_weight"] for e in edges]).astype(
+        np.float32
+    )
+    lr_scores = np.array([graph.edges[tuple(e)]["lr_weight"] for e in edges]).astype(
         np.float32
     )
 
-    print("Nodes dtype: ", nodes.dtype)
-    print("edges dtype: ", edges.dtype)
-    print("scores dtype: ", scores.dtype)
-
     print("Complete RAG contains %d nodes, %d edges" % (len(nodes), len(edges)))
 
-    out_dir = os.path.join(fragments_file, "luts_full", "fragment_segment")
+    out_dir = os.path.join(fragments_file, "luts_full")
 
     os.makedirs(out_dir, exist_ok=True)
 
-    thresholds = list(
-        np.arange(thresholds_minmax[0], thresholds_minmax[1], thresholds_step)
-    )
-
     start = time.time()
 
-    for threshold in thresholds:
-        get_connected_components(
-            nodes,
-            edges,
-            scores,
-            threshold,
-            edges_collection,
-            out_dir,
-        )
+    segment(
+        nodes,
+        edges,
+        adj_scores,
+        lr_scores,
+        edges_collection,
+        out_dir,
+    )
 
-        print("Created and stored lookup tables in %.3fs" % (time.time() - start))
+    print("Created and stored lookup tables in %.3fs" % (time.time() - start))
 
 
-def get_connected_components(
-    nodes, edges, scores, threshold, edges_collection, out_dir, **kwargs
-):
+def segment(nodes, edges, adj_scores, lr_scores, edges_collection, out_dir):
     # drop out mask will be added to scores. anything with a 1 added will always be above threshold
     # dropout_mask = np.random.randn(len(scores)) / 500
     # dropout_mask = dropout_mask.astype(np.float32)
     # scores += dropout_mask
 
-    print("Getting CCs for threshold %.3f..." % threshold)
+    adj_bias = 0.0
+    lr_bias = -1.0
+    edges = [
+        (adj + adj_bias, u, v)
+        for adj, (u, v) in zip(adj_scores, edges)
+        if not np.isnan(adj) and adj is not None
+    ] + [
+        (lr_adj + lr_bias, u, v)
+        for lr_adj, (u, v) in zip(lr_scores, edges)
+        if not np.isnan(lr_adj) and lr_adj is not None
+    ]
+    edges = sorted(
+        edges,
+        key=lambda edge: abs(edge[0]),
+        reverse=True,
+    )
+    edges = [(bool(aff > 0), u, v) for aff, u, v in edges]
+    lut = mws.cluster(edges)
+    inputs, outputs = zip(*lut)
+
     start = time.time()
-    components = connected_components(nodes, edges, scores, threshold)
     print("%.3fs" % (time.time() - start))
 
-    print("Creating fragment-segment LUT for threshold %.3f..." % threshold)
     start = time.time()
-    lut = np.array([nodes, components])
+    lut = np.array([inputs, outputs])
 
     print("%.3fs" % (time.time() - start))
 
-    print("Storing fragment-segment LUT for threshold %.3f..." % threshold)
-    start = time.time()
-
-    lookup = "seg_%s_%d" % (edges_collection, int(threshold * 10000))
+    lookup = "seg_%s" % (edges_collection)
     lookup = lookup.replace("/", "-")
 
     out_file = os.path.join(out_dir, lookup)
 
-    np.savez_compressed(
-        out_file, fragment_segment_lut=lut, edges=edges, merged_edges=scores < threshold
-    )
+    np.savez_compressed(out_file, fragment_segment_lut=lut, edges=edges)
 
     print("%.3fs" % (time.time() - start))
 
@@ -168,8 +177,8 @@ if __name__ == "__main__":
         db_host="mongodb://microdosingAdmin:Cu2CO3OH2@funke-mongodb2.int.janelia.org:27017",
         db_name="dacapo_zebrafish",
         fragments_file="/nrs/funke/pattonw/predictions/zebrafish/zebrafish.n5",
-        fragments_dataset=f"predictions/2023-05-09/s17/cells_finetuned_3d_lsdaffs_zebrafish_cells_upsample-unet_default_v3__1__60000_fragments",
-        edges_collection=f"s17-stitched_edges_hist_quant_75",
+        fragments_dataset="predictions/2023-05-09/s17/cells_finetuned_3d_lsdaffs_zebrafish_cells_upsample-unet_default_v3__1__60000_fragments",
+        edges_collection=f"s17-stitched_edges_mwatershed",
         thresholds_minmax=[0.0, 1.0],
         thresholds_step=0.05,
         sample_name=f"s17-stitched",

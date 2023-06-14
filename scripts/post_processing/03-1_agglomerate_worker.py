@@ -1,3 +1,5 @@
+from funlib.persistence import graphs
+
 import daisy
 import logging
 import lsd.post
@@ -5,6 +7,8 @@ import json
 import sys
 import pymongo
 import time
+
+from funlib.persistence import open_ds
 
 logging.basicConfig(level=logging.INFO)
 
@@ -40,12 +44,12 @@ def agglomerate_worker(input_config):
     }[merge_function]
 
     logging.info("Reading affs from %s" % affs_file)
-    affs = daisy.open_ds(affs_file, affs_dataset, mode="r")
-    fragments = daisy.open_ds(fragments_file, fragments_dataset, mode="r+")
+    affs = open_ds(affs_file, affs_dataset, mode="r")
+    fragments = open_ds(fragments_file, fragments_dataset, mode="r+")
 
     # open RAG DB
     logging.info("Opening RAG DB...")
-    rag_provider = daisy.persistence.MongoDbGraphProvider(
+    rag_provider = graphs.MongoDbGraphProvider(
         db_name,
         host=db_host,
         mode="r+",
@@ -80,6 +84,7 @@ def agglomerate_worker(input_config):
                 block,
                 merge_function=waterz_merge_function,
                 threshold=1.0,
+                aff_min=-1,
             )
 
             document = {
