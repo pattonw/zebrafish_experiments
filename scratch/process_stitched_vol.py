@@ -6,11 +6,13 @@ import zarr
 
 from pathlib import Path
 
+# Script for turning a raw file into a zarr dataset
+
 path = Path(
     "/nrs/funke/pattonw/data/zebrafish/stitched/top_left_right_bottom_resliced_8555x5155x4419.raw"
 )
 container = zarr.open(
-    "/nrs/funke/pattonw/data/zebrafish/stitched/samples.zarr", mode="r+"
+    "/nrs/funke/pattonw/predictions/zebrafish/zebrafish.n5", mode="r+"
 )
 output_data = container.create_dataset(
     "volumes/s17/raw", dtype=np.uint8, overwrite=True, shape=(8555, 5155, 4419)
