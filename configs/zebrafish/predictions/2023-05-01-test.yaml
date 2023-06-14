@@ -1,0 +1,49 @@
+name: 2023-05-01-test
+billing: funke
+predictions:
+  # - outputs:
+  #     - cells
+  #   datasets:
+  #     - name: val
+  #       container: /nrs/funke/pattonw/data/zebrafish/zebrafish.n5
+  #       array: volumes/8-2/raw
+  #   setups:
+  #     - name: finetuned_3d_lsdaffs_zebrafish_cells_upsample-unet_default_v3__0
+  #     - name: finetuned_3d_lsdaffs_zebrafish_cells_upsample-unet_default_v3__1
+  #     - name: scratch_3d_lsdaffs_zebrafish_cells_upsample-unet_default_v3__0
+  #     - name: scratch_3d_lsdaffs_zebrafish_cells_upsample-unet_default_v3__1
+
+  #   criteria:
+  #     - "10000"
+  #     - "20000"
+  #     - "30000"
+  - outputs:
+      - axons
+    datasets:
+      - name: val
+        container: /nrs/funke/pattonw/data/zebrafish/zebrafish.n5
+        array: volumes/8-2/raw
+    setups:
+      - name: finetuned_3d_lsdaffs_zebrafish_axons_upsample-unet_default_v3__0
+      - name: finetuned_3d_lsdaffs_zebrafish_axons_upsample-unet_default_v3__1
+      - name: scratch_3d_lsdaffs_zebrafish_axons_upsample-unet_default_v3__0
+      - name: scratch_3d_lsdaffs_zebrafish_axons_upsample-unet_default_v3__1
+    criteria:
+      - "5000"
+      - "10000"
+      - "15000"
+  - outputs:
+      - vessel
+    datasets:
+      - name: val
+        container: /nrs/funke/pattonw/data/zebrafish/zebrafish.n5
+        array: volumes/8-2/raw
+    setups:
+      - name: finetuned_3d_lsdaffs_zebrafish_vessel_upsample-unet_default_v4__0
+      - name: finetuned_3d_lsdaffs_zebrafish_vessel_upsample-unet_default_v4__1
+      - name: scratch_3d_lsdaffs_zebrafish_vessel_upsample-unet_default_v4__0
+      - name: scratch_3d_lsdaffs_zebrafish_vessel_upsample-unet_default_v4__1
+    criteria:
+      - "5000"
+      - "10000"
+      - "15000"

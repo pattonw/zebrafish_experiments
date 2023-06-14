@@ -1,0 +1,14 @@
+name: 2023-05-09
+billing: funke
+predictions:
+  - outputs:
+      - cells
+    datasets:
+      - name: s17
+        container: /nrs/funke/pattonw/predictions/zebrafish/zebrafish.n5
+        array: volumes/s17/raw
+    setups:
+      - name: finetuned_3d_lsdaffs_zebrafish_cells_upsample-unet_default_v3__1
+        target: cells
+    criteria:
+      - "60000"

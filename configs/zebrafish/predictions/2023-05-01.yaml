@@ -1,0 +1,72 @@
+name: 2023-05-01
+billing: funke
+predictions:
+  - outputs:
+      - cells
+    datasets:
+      - name: 16_bot
+        container: /nrs/funke/adjavond/zebrafish/data/s16_bottom_110nm_rec_.n5
+        array: raw
+      # - name: 23_bot
+      #   container: /nrs/funke/adjavond/zebrafish/data/s23_bottom_110nm_rec_.n5
+      #   array: raw
+      # - name: 23_mid1
+      #   container: /nrs/funke/adjavond/zebrafish/data/s23_mid1_110nm_rec_.n5
+      #   array: raw
+      # - name: 23_top
+      #   container: /nrs/funke/adjavond/zebrafish/data/s23_top_110nm_rec_.n5
+      #   array: raw
+    setups:
+      - name: finetuned_3d_lsdaffs_zebrafish_cells_upsample-unet_default_v3__1
+        target: cells
+    roi:
+      - [512, 512, 512]
+      - [1024, 1024, 1024]
+    criteria:
+      - "60000"
+  - outputs:
+      - axons
+    datasets:
+      - name: 16_bot
+        container: /nrs/funke/adjavond/zebrafish/data/s16_bottom_110nm_rec_.n5
+        array: raw
+      # - name: 23_bot
+      #   container: /nrs/funke/adjavond/zebrafish/data/s23_bottom_110nm_rec_.n5
+      #   array: raw
+      # - name: 23_mid1
+      #   container: /nrs/funke/adjavond/zebrafish/data/s23_mid1_110nm_rec_.n5
+      #   array: raw
+      # - name: 23_top
+      #   container: /nrs/funke/adjavond/zebrafish/data/s23_top_110nm_rec_.n5
+      #   array: raw
+    setups:
+      - name: finetuned_3d_lsdaffs_zebrafish_axons_upsample-unet_default_v3__0
+        target: axons
+    roi:
+      - [512, 512, 512]
+      - [1024, 1024, 1024]
+    criteria:
+      - "50000"
+  - outputs:
+      - vessel
+    datasets:
+      - name: 16_bot
+        container: /nrs/funke/adjavond/zebrafish/data/s16_bottom_110nm_rec_.n5
+        array: raw
+      # - name: 23_bot
+      #   container: /nrs/funke/adjavond/zebrafish/data/s23_bottom_110nm_rec_.n5
+      #   array: raw
+      # - name: 23_mid1
+      #   container: /nrs/funke/adjavond/zebrafish/data/s23_mid1_110nm_rec_.n5
+      #   array: raw
+      # - name: 23_top
+      #   container: /nrs/funke/adjavond/zebrafish/data/s23_top_110nm_rec_.n5
+      #   array: raw
+    setups:
+      - name: finetuned_3d_lsdaffs_zebrafish_vessel_upsample-unet_default_v4__0
+      - name: scratch_3d_lsdaffs_zebrafish_vessel_upsample-unet_default_v4__0
+    roi:
+      - [512, 512, 512]
+      - [1024, 1024, 1024]
+    criteria:
+      - "50000"

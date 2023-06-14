@@ -1,0 +1,47 @@
+name: 2023-04-05
+billing: funke
+predictions:
+  - outputs:
+      - cells
+    datasets:
+      - name: 23_bot
+        container: /nrs/funke/adjavond/zebrafish/data/s23_bottom_110nm_rec_.n5
+        array: raw
+    setups:
+      - name: scratch_3d_lsdaffs_zebrafish_cells_upsample-unet_default_v2_v2__1
+        target: cells
+    criteria:
+      - "70000"
+      - "80000"
+    roi:
+      - [512, 512, 512]
+      - [1024, 1024, 1024]
+  - outputs:
+      - vessel
+    datasets:
+      - name: 23_bot
+        container: /nrs/funke/adjavond/zebrafish/data/s23_bottom_110nm_rec_.n5
+        array: raw
+    setups:
+      - name: scratch_3d_lsdaffs_zebrafish_vessel_upsample-unet_default_v2__0
+        target: vessel
+    criteria:
+      - "60000"
+      - "80000"
+    roi:
+      - [512, 512, 512]
+      - [1024, 1024, 1024]
+  - outputs:
+      - axons
+    datasets:
+      - name: 23_bot
+        container: /nrs/funke/adjavond/zebrafish/data/s23_bottom_110nm_rec_.n5
+        array: raw
+    setups:
+      - name: scratch_3d_lsdaffs_zebrafish_axons_upsample-unet_default_v2__0
+        target: axons
+    criteria:
+      - "80000"
+    roi:
+      - [512, 512, 512]
+      - [1024, 1024, 1024]
