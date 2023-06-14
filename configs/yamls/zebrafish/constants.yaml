@@ -1,34 +1,35 @@
 # default paths to check for data
 input_container: /groups/mousebrainmicro/home/pattonw/Data/michelle_zebrafish/zebrafish.n5
+id_annotations_path: /groups/mousebrainmicro/home/pattonw/Data/michelle_zebrafish/id_annotations/{organelle}-{sample}-{annotation_type}.txt
 dataset_container: /nrs/funke/pattonw/data/zebrafish/zebrafish.n5
-data_group: "{crop}/{index}"
-raw_dataset: "{crop}/{index}/raw"
-gt_dataset: "{crop}/{index}/{organelle}"
-mask_dataset: "{crop}/{index}/{organelle}_mask"
+data_group: "volumes/{sample}"
+raw_dataset: "volumes/{sample}/raw"
+gt_dataset: "volumes/{sample}/{organelle}"
+mask_dataset: "volumes/{sample}/{organelle}_mask"
+points_dataset: "volumes/{sample}/{organelle}_points"
 prediction_container: "/nrs/funke/pattonw/predictions/zebrafish/zebrafish.n5"
 sample_path: "/nrs/funke/adjavond/zebrafish/data"
 
 data_problems:
-    17:
-        2:
-            cells:
-                id_mapping:
-                    - [34, 0]
-                    - [21, 0]
-                mask_id: 81
-    8:
-        1:
-            axons:
-                id_mapping:
-                    - [8, 3]
-                mask_id: 11
-            cells:
-                mask_id: 5
-        2:
-            axons:
-                mask_id: 4
-            cells:
-                mask_id: 3
-            vessel:
-                mask_id: 3
-
+    17-2:
+        cells:
+            id_mapping:
+                - [34, 0]
+                - [21, 0]
+            mask_id: 81
+    8-1:
+        axons:
+            id_mapping:
+                - [8, 3]
+            mask_id: 9
+        cells:
+            mask_id: 5
+    8-2:
+        axons:
+            id_mapping:
+                - [8, 6]
+            mask_id: 12
+        cells:
+            mask_id: 3
+        vessel:
+            mask_id: 3
